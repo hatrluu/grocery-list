@@ -1,0 +1,28 @@
+.addSection {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.storeSection {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.quantity {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.qrSection {
+    margin: 20px 0;
+    text-align: center;
+}
