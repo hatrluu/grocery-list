@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Toggle from "./components/Toggle";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,8 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className="">
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-gray-300 dark:bg-slate-800`}>
+        <Toggle label="Theme toggle"></Toggle>
         {children}
       </body>
     </html>
