@@ -1,4 +1,4 @@
-// components/item.tsx
+// components/GroceryItem.tsx
 'use client';
 
 import { Check, Edit2, Trash2 } from "lucide-react";
@@ -57,15 +57,27 @@ const GroceryItem = ({ groceryItem, onUpdate, onDelete }: GroceryItemProps) => {
         }
     };
 
+    const readableDateTime = (dateString: string) => {
+        // Use a fixed locale to ensure consistent formatting between server and client
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false, // Use 24-hour format for consistency
+        }).format(new Date(dateString));
+    }
     if (isEditing) {
         return (
             <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                <div className="space-y-3">
+                <div className="space-y-3 w-full">
                     <input
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
                                 dark:bg-slate-800 dark:border-gray-600 dark:text-gray-400"
                         placeholder="Item name"
                         autoFocus
@@ -74,7 +86,7 @@ const GroceryItem = ({ groceryItem, onUpdate, onDelete }: GroceryItemProps) => {
                         type="number"
                         value={editQuantity}
                         onChange={(e) => setEditQuantity(parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
                                     dark:bg-slate-800 dark:border-gray-600 dark:text-gray-400"
                         placeholder="Quantity"
                     />
@@ -82,73 +94,78 @@ const GroceryItem = ({ groceryItem, onUpdate, onDelete }: GroceryItemProps) => {
                         type="text"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
                                     dark:bg-slate-800 dark:border-gray-600 dark:text-gray-400"
                         placeholder="Note (optional)"
                     />
                 </div>
-                <div className="flex gap-2 mt-3">
-                    <button
-                        onClick={handleSaveEdit}
-                        className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Save
-                    </button>
-                    <button
-                        onClick={() => setIsEditing(false)}
-                        className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-500 dark:text-white"
-                    >
-                        Cancel
-                    </button>
+                <div className="flex justify-between gap-2 mt-3">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-500 dark:text-white"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSaveEdit}
+                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                            Save
+                        </button>
+                    </div>
+
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`flex items-center gap-4 p-4 ${groceryItem.is_checked ? 'bg-gray-200 dark:bg-slate-600' : ''
-            }`}>
+        <div className={`flex items-center gap-4 py-4 ${groceryItem.is_checked ? 'bg-gray-200 dark:bg-slate-600' : ''}`}>
             <button
                 onClick={handleToggleCheck}
-                className={`p-2 border-2 border-gray-300 rounded-md transition-colors ${groceryItem.is_checked
+                className={`border-2 border-gray-300 rounded-md transition-colors ${groceryItem.is_checked
                     ? 'bg-green-100 text-green-600'
                     : 'hover:bg-gray-400 text-gray-50 dark:bg-slate-700'
                     }`}
             >
-                <Check size={20} />
+                <Check className="dark:text-slate-700 hover:bg-gray-400" size={16} />
             </button>
-
-            <div className="flex-1">
-                <div className="flex items-start gap-2">
-                    <span className={`font-bold ${groceryItem.is_checked ?
-                        'line-through text-gray-400' : 'text-gray-700 dark:text-slate-300'
-                        }`}>
-                        {groceryItem.name}
-                        {groceryItem.quantity && (
-                            <>
-                                &nbsp;
-                                x
-                                {groceryItem.quantity}
-                            </>
-                        )}
-                    </span>
-                    {groceryItem.description && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            Note: {groceryItem.description}
-                        </p>
+            <div className="flex-1 flex flex-col gap-1">
+                <span className={`font-bold ${groceryItem.is_checked ?
+                    'line-through text-gray-400' : 'text-gray-700 dark:text-slate-300'
+                    }`}>
+                    {groceryItem.name}
+                    {groceryItem.quantity && (
+                        <>
+                            &nbsp;
+                            x
+                            {groceryItem.quantity}
+                        </>
                     )}
-                </div>
+                </span>
 
-                <div className="flex gap-4 text-xs text-gray-400 mt-1">
-                    <span>Added by {groceryItem.added_by_name}</span>
-                    <span>
-                        {groceryItem.added_at}
-                    </span>
+                {groceryItem.description && (
+                    <p className="text-sm text-gray-500">
+                        Note: {groceryItem.description}
+                    </p>
+                )}
+
+                <div className="flex flex-col gap-0.5 text-xs text-gray-400">
+                    <span>Edited by {groceryItem.added_by_name} at {readableDateTime(groceryItem.added_at)}</span>
                 </div>
             </div>
 
             <div className="flex items-center gap-2">
                 {/* Action buttons */}
+                <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-md text-sm bg-red-600 text-white
+                        hover:bg-red-700 transition-colors"
+                >
+                    <Trash2 size={16} />
+                </button>
                 <button
                     onClick={() => {
                         setIsEditing(true);
@@ -158,13 +175,6 @@ const GroceryItem = ({ groceryItem, onUpdate, onDelete }: GroceryItemProps) => {
                     className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md"
                 >
                     <Edit2 size={16} />
-                </button>
-                <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-md"
-                >
-                    <Trash2 size={16} />
                 </button>
             </div>
         </div>

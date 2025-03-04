@@ -1,72 +1,72 @@
 // components/QRCodeDisplay.tsx
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Copy, DownloadIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
-import QRCode from 'react-qr-code';
-import SessionIdDisplay from './SessionIdDisplay';
+import { QRCodeCanvas } from 'qrcode.react';
+import { toast } from 'sonner';
 
 interface QRCodeDisplayProps {
     sessionId: string;
+    onEvent: (value: boolean) => void;
 }
 
-export default function QRCodeDisplay({ sessionId }: QRCodeDisplayProps) {
-    const [isExpanded, setIsExpanded] = useState(true);
+export default function QRCodeDisplay({ sessionId, onEvent }: QRCodeDisplayProps) {
+    const copyToClipboard = () => {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url);
+        toast.success('Link copied to clipboard!');
+        onEvent(false);
+    };
 
     const downloadQR = () => {
-        const canvas = document.querySelector('canvas');
+        const canvas = document.querySelector('.qrcode-canvas>canvas') as HTMLCanvasElement;
         if (!canvas) return;
 
         const link = document.createElement('a');
         link.download = `session-${sessionId}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
+        toast.success('QR code downloaded!');
+        onEvent(false);
     };
 
     return (
         <div
-            className={`fixed top-0 right-0 h-full bg-white dark:bg-slate-950
+            className="bg-white dark:bg-slate-950
                 shadow-lg transition-all duration-300 
-                ease-in-out ${isExpanded ? 'w-96' : 'w-12'
-                }`}
+                ease-in-out w-96"
         >
-            {/* Toggle Button */}
-            <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                title="Get QR Code"
-                className="absolute top-1/2 -left-3 transform -translate-y-1/2 bg-gray-500 rounded-full p-1 shadow-md hover:bg-gray-600"
-            >
-                {isExpanded ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-            </button>
-
             {/* Content */}
-            <div className={`h-full overflow-auto transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'
-                }`}>
-                {isExpanded && (
-                    <div className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200">
-                                Session QR Code
-                            </h1>
-                        </div>
+            <div className="h-full overflow-auto transition-opacity duration-300 opacity-100">
+                <div className="p-6">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm text-gray-700 dark:text-gray-300 mb-2 px-3 py-2">
+                            Share this grocery list
+                        </h3>
+                    </div>
 
-                        <div className="space-y-4">
-                            <SessionIdDisplay sessionId={sessionId}></SessionIdDisplay>
-
-                            <div className="bg-white p-4 rounded-md border border-gray-200 flex justify-center">
-                                <QRCode value={window.location.href} />
-                            </div>
-
-                            <button
-                                onClick={downloadQR}
-                                className="w-full bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors"
-                            >
-                                Download QR Code
-                            </button>
+                    <div className="space-y-4">
+                        <button
+                            onClick={copyToClipboard}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md flex items-center gap-2"
+                        >
+                            <Copy size={16} />
+                            Copy link
+                        </button>
+                        <Link
+                            href={`/qr/${sessionId}`}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md flex items-center gap-2"
+                            onClick={downloadQR}
+                        >
+                            <DownloadIcon size={16} />
+                            Download QR Code
+                        </Link>
+                        <div className="bg-white p-4 rounded-md border border-gray-200 flex justify-center qrcode-canvas">
+                            <QRCodeCanvas value={window.location.href} size={256} marginSize={4}/>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );

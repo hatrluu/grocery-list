@@ -1,4 +1,5 @@
 export interface IItem {
+    store_id: number;
     item_id: number;
     name: string;
     description?: string;

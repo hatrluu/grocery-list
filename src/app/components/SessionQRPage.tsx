@@ -10,8 +10,8 @@ const SessionQRPage = () => {
     const createNewSession = () => {
         // Generate a unique session ID using our UUID function
         const newSessionId = generateUUID();
-        const expireDate = new Date();
-        expireDate.setDate(expireDate.getDate() + 30);
+        // Create expiration date using UTC to ensure consistency
+        const expireDate = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
         createSession({ sessionId: newSessionId, expiresAt: expireDate }).then(() => {
             router.push(`/qr/${newSessionId}`);
         })
@@ -26,7 +26,7 @@ const SessionQRPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-300 dark:bg-gray-800 py-12 px-4">
+        <div className="min-h-screen bg-gray-300 dark:bg-gray-700 py-12 px-4">
             <div className="max-w-md mx-auto bg-gray-50 dark:bg-gray-500 rounded-xl shadow-md overflow-hidden">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-gray-800 mb-6">

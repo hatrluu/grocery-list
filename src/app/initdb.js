@@ -8,6 +8,7 @@ db.prepare(`
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         expires_at TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE
+        name TEXT NOT NULL,
     );
 
     -- Users table to track family members

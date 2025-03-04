@@ -2,18 +2,19 @@ import jsQR from 'jsqr';
 import { Camera, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+
 const QRCodeReader = () => {
-    const [imageUrl, setImageUrl] = useState(null);
-    const [error, setError] = useState('');
-    const [isCapturing, setIsCapturing] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const videoRef = useRef(null);
-    const fileInputRef = useRef(null);
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [error, setError] = useState<string>('');
+    const [isCapturing, setIsCapturing] = useState<boolean>(false);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const router = useRouter();
 
     // Scanner interval for live detection
     useEffect(() => {
-        let intervalId;
+        let intervalId: NodeJS.Timeout;
         if (isCapturing) {
             intervalId = setInterval(() => {
                 scanVideoFrame();
@@ -31,6 +32,8 @@ const QRCodeReader = () => {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -45,28 +48,40 @@ const QRCodeReader = () => {
     const startCamera = async () => {
         try {
             setIsCapturing(true);
+            
+            // Check if mediaDevices API is available
+            if (!navigator.mediaDevices) {
+                throw new Error(
+                    'Camera access is not supported by your browser or requires HTTPS. ' +
+                    'Please try using a different browser or ensure you\'re accessing the site via HTTPS.'
+                );
+            }
+            
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment' }
             });
+            
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 setError('');
             }
-        } catch (err) {
-            setError('Unable to access camera. Please check permissions.');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            setError(`Unable to access camera: ${errorMessage}`);
+            setIsCapturing(false); // Reset capturing state on error
         }
     };
 
     const stopCamera = () => {
         if (videoRef.current?.srcObject) {
-            const tracks = videoRef.current.srcObject.getTracks();
+            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
             tracks.forEach(track => track.stop());
             videoRef.current.srcObject = null;
             setIsCapturing(false);
         }
     };
 
-    const processImage = async (imageElement) => {
+    const processImage = async (imageElement: HTMLImageElement) => {
         setIsProcessing(true);
         setError('');
 
@@ -75,6 +90,8 @@ const QRCodeReader = () => {
             canvas.width = imageElement.width;
             canvas.height = imageElement.height;
             const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Could not get canvas context');
+
             ctx.drawImage(imageElement, 0, 0);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -84,18 +101,21 @@ const QRCodeReader = () => {
             } else {
                 setError('No QR code found in image');
             }
-        } catch (err) {
-            setError('Error processing image');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            setError(`Error processing image: ${errorMessage}`);
         } finally {
             setIsProcessing(false);
         }
     };
+
     const imageProcessed = (url: string) => {
         console.log(url);
         const urlFrag = url.split('/');
         router.push(`/qr/${urlFrag[urlFrag.length-1]}`);
     }
-    const handleFileUpload = (event: any) => {
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             if (!file.type.includes('image/')) {
@@ -104,13 +124,17 @@ const QRCodeReader = () => {
             }
 
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (e: ProgressEvent<FileReader>) => {
                 const img = new Image();
                 img.onload = () => {
-                    setImageUrl(e.target.result);
-                    processImage(img);
+                    if (e.target?.result && typeof e.target.result === 'string') {
+                        setImageUrl(e.target.result);
+                        processImage(img);
+                    }
                 };
-                img.src = e.target.result;
+                if (e.target?.result && typeof e.target.result === 'string') {
+                    img.src = e.target.result;
+                }
             };
             reader.onerror = () => {
                 setError('Error reading file');
